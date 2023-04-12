@@ -1,15 +1,18 @@
 extends CanvasLayer
 
-onready var joinbutton = $vbxLobbyContainer/btnJoin
-onready var hostbutton = $vbxLobbyContainer/btnHost
-onready var status = $hbxStatusContainer/lblStatus
-onready var colors = $vbxLobbyContainer/hbxIPContainer2/optColors
-onready var ip_address = $vbxLobbyContainer/hbxIPContainer/txtIP
-onready var user_name = $vbxLobbyContainer/hbxNameContainer/txtName
+@onready var joinbutton = $vbxLobbyContainer/btnJoin
+@onready var hostbutton = $vbxLobbyContainer/btnHost
+@onready var status = $hbxStatusContainer/lblStatus
+@onready var colors = $vbxLobbyContainer/hbxIPContainer2/optColors
+@onready var ip_address = $vbxLobbyContainer/hbxIPContainer/txtIP
+@onready var user_name = $vbxLobbyContainer/hbxNameContainer/txtName
+
+var enet : ENetMultiplayerPeer = ENetMultiplayerPeer.new()
+const SERVER_PORT = 9999
 
 func _ready() -> void:
 	compile_colors()
-	get_tree().connect("connection_failed", self, "connected_fail")
+	multiplayer.connect("connection_failed",Callable(self,"connected_fail"))
 	
 #populate the option list with colors
 func compile_colors():
@@ -25,13 +28,14 @@ func _on_btnHost_pressed() -> void:
 	status.text = "Hosting"
 	Network.user_name = user_name.text
 	#put our username and ID in the dictionary
-	Network.user_list[str(get_tree().get_network_unique_id())] = Network.user_name
+	Network.user_list[str(multiplayer.get_unique_id())] = Network.user_name
 
 func _on_btnJoin_pressed() -> void:
 	#Create a  client that will connect to the server
-	var client : NetworkedMultiplayerENet = NetworkedMultiplayerENet.new()
-	client.create_client(ip_address.text,9999)
-	get_tree().set_network_peer(client)
+#	var client : ENetMultiplayerPeer = ENetMultiplayerPeer.new()
+	enet.create_client(ip_address.text,SERVER_PORT)
+	multiplayer.multiplayer_peer = enet
+#	enet.set_multiplayer_peer(multiplayer.get_unique_id())
 	
 	#Disable buttons while we wait
 	joinbutton.disabled = true
